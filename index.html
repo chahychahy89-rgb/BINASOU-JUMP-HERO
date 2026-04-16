@@ -15,17 +15,18 @@ function initGame() {
 
         function loop() {
             if (!active) return;
-            // لون خلفية يتغير مع كل مرحلة (الطبيعة البرمجية)
-            ctx.fillStyle = hsl(${(level * 60) % 360}, 30%, 10%);
+            
+            // خلفية متدرجة (الطبيعة البرمجية)
+            ctx.fillStyle = hsl(${(level * 50) % 360}, 20%, 8%);
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             // الأرضية
-            ctx.fillStyle = '#222';
+            ctx.fillStyle = '#111';
             ctx.fillRect(0, canvas.height - 80, canvas.width, 80);
-            ctx.fillStyle = var(--gold);
-            ctx.fillRect(0, canvas.height - 80, canvas.width, 4);
+            ctx.fillStyle = '#d4af37'; 
+            ctx.fillRect(0, canvas.height - 80, canvas.width, 3);
 
-            // الفيزياء
+            // الجاذبية
             hero.dy += hero.grav;
             hero.y += hero.dy;
             if (hero.y > canvas.height - 80 - hero.h) {
@@ -34,22 +35,26 @@ function initGame() {
                 hero.onGround = true;
             }
 
-            // رسم البطل برمجياً
-            ctx.fillStyle = (gender === 'male') ? var(--gold) : '#ff66b2';
+            // رسم البطل
+            ctx.fillStyle = (gender === 'male') ? '#d4af37' : '#ff66b2';
             ctx.fillRect(hero.x, hero.y, hero.w, hero.h);
+            ctx.fillStyle = '#fff'; // العين
+            ctx.fillRect(hero.x + 25, hero.y + 10, 8, 8);
 
             // العوائق
-            if (Math.random() < 0.02) obstacles.push({ x: canvas.width, w: 30, h: 40 });
+            if (Math.random() < 0.02) obstacles.push({ x: canvas.width, w: 35, h: 45 });
             
             obstacles.forEach((o, i) => {
-                o.x -= (6 + level * 2);
-                ctx.fillStyle = var(--silver);
+                o.x -= (6 + level * 1.5);
+                ctx.fillStyle = '#C0C0C0';
                 ctx.fillRect(o.x, canvas.height - 80 - o.h, o.w, o.h);
 
+                // تصادم
                 if (hero.x < o.x + o.w && hero.x + hero.w > o.x && hero.y + hero.h > canvas.height - 80 - o.h) {
                     gameOver();
                 }
 
+                // نقاط ومراحل
                 if (o.x < -o.w) {
                     obstacles.splice(i, 1);
                     score++;
@@ -72,12 +77,18 @@ function initGame() {
             if (score > highScore) localStorage.setItem('binasou_highscore', score);
             document.getElementById('game-over-screen').classList.remove('hidden');
             document.getElementById('final-stats').innerHTML = 
-                نقاطك: ${score} يا ${userName}<br>
-                <span class="motivational-msg">أنت بطل حقيقي!</span>
+                حققت ${score} نقطة يا ${userName}!<br>
+                <span class="motivational-msg">أنت تقفز كالمحترفين!</span>
             ;
         }
 
         window.addEventListener('touchstart', () => {
+            if (hero.onGround && active) {
+                hero.dy = hero.jump;
+                hero.onGround = false;
+            }
+        });
+        window.addEventListener('mousedown', () => {
             if (hero.onGround && active) {
                 hero.dy = hero.jump;
                 hero.onGround = false;
