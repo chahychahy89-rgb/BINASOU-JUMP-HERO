@@ -3,26 +3,110 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>BINASOU JUMP HERO - العصر  الذهبي</title>
+    <title>BINASOU JUMP HERO</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root { --gold: #d4af37; --gold-cream: #f9e297; --dark: #000; }
-        body { margin: 0; padding: 0; background-color: var(--dark); color: var(--gold); font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; overflow: hidden; touch-action: none; text-align: center; height: 100vh; display: flex; flex-direction: column; }
+        :root { 
+            --gold: #d4af37; 
+            --silver: #C0C0C0;
+            --premium-bg: linear-gradient(135deg, #1a1a1a 0%, #000000 100%);
+            --btn-grad: linear-gradient(45deg, #d4af37, #f9e297, #C0C0C0);
+        }
         
-        /* خلفية الطبيعة الساحرة */
-        #game-container { position: relative; width: 100%; flex-grow: 1; background-image: url('https://images.unsplash.com/photo-1518173946687-a4c8892bbd9f?q=80&w=640'); background-size: cover; background-position: center; border-bottom: 4px solid var(--gold); box-shadow: 0 5px 20px rgba(212, 175, 55, 0.3); overflow: hidden; }
+        body { 
+            margin: 0; padding: 0; background: var(--premium-bg); 
+            color: var(--gold); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            overflow: hidden; touch-action: none; height: 100vh; display: flex; flex-direction: column; 
+        }
+
+        /* شاشة البداية */
+        #start-screen {
+            position: absolute; width: 100%; height: 100%; background: rgba(0,0,0,0.9);
+            z-index: 200; display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+
+        .welcome-title { font-size: 32px; margin-bottom: 20px; text-shadow: 0 0 10px var(--gold); }
+
+        .gender-select { margin-bottom: 30px; }
+        .gender-btn { 
+            background: none; border: 2px solid var(--silver); color: #fff; 
+            padding: 10px 20px; margin: 10px; border-radius: 15px; cursor: pointer; 
+        }
+        .gender-btn.active { background: var(--gold); color: black; border-color: var(--gold); }
+
+        #game-container { position: relative; width: 100%; flex-grow: 1; overflow: hidden; display: none; }
         
-        canvas { display: block; width: 100%; height: 100%; }
-        
-        /* واجهة المستخدم (النقاط) */
-        .ui-panel { position: absolute; top: 10px; left: 10px; right: 10px; display: flex; justify-content: space-between; align-items: center; z-index: 10; pointer-events: none; }
-        .score-box { background: rgba(0,0,0,0.6); border: 2px solid var(--gold); padding: 5px 15px; border-radius: 20px; font-size: 22px; font-weight: bold; box-shadow: 0 0 10px var(--gold); text-shadow: 0 0 5px var(--gold); }
-        
-        /* شاشة انتهت اللعبة (فخمة) */
-        #gameOver { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.9); border: 3px solid var(--gold); padding: 30px; border-radius: 25px; display: none; z-index: 100; width: 80%; box-shadow: 0 0 30px var(--gold); }
-        #gameOver h1 { color: var(--gold-cream); font-size: 36px; margin-top: 0; text-shadow: 0 0 10px var(--gold); }
-        #gameOver p { font-size: 20px; color: #fff; }
-        #finalScore { font-weight: bold; color: var(--gold); font-size: 28px; }
-        
-        /* أزرار ذهبية */
-        .gold-btn { background: linear-gradient(45deg, var(--gold), #b38f2d); color: var(--dark); border: none; padding: 12px 24px; font-size: 18px; font-weight: bold; border-radius: 30px; cursor
+        canvas { display: block; width: 100%; height: 100%; background: url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=1000') center/cover; }
+
+        .ui-panel { position: absolute; top: 15px; width: 100%; display: flex; justify-content: space-around; pointer-events: none; }
+        .score-box { background: rgba(0,0,0,0.8); border: 1px solid var(--gold); padding: 8px 20px; border-radius: 50px; font-weight: bold; }
+
+        /* الأزرار والرسائل */
+        .main-btn { 
+            background: var(--btn-grad); color: #000; border: none; 
+            padding: 15px 40px; font-size: 20px; font-weight: bold; 
+            border-radius: 50px; cursor: pointer; transition: 0.3s;
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.5);
+        }
+
+        #motivation-msg {
+            position: absolute; top: 20%; width: 100%; text-align: center;
+            font-size: 24px; font-weight: bold; color: var(--gold-cream);
+            text-shadow: 2px 2px 4px #000; display: none; z-index: 50;
+        }
+
+        #gameOver {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.95); border: 2px solid var(--gold);
+            padding: 40px; border-radius: 30px; text-align: center; display: none; z-index: 100;
+        }
+    </style>
+</head>
+<body>
+
+<div id="start-screen">
+    <h1 class="welcome-title">BINASOU JUMP HERO</h1>
+    <div class="gender-select">
+        <p>اختر شخصيتك:</p>
+        <button class="gender-btn active" onclick="setGender('male', this)">رجل (ذهبي/فضي)</button>
+        <button class="gender-btn" onclick="setGender('female', this)">امرأة (ذهبي/فضي)</button>
+    </div>
+    <button class="main-btn" onclick="startGame()">Welcome to BINASOU</button>
+</div>
+
+<div id="game-container">
+    <div id="motivation-msg">أحسنت! استمر في التقدم</div>
+    <div class="ui-panel">
+        <div class="score-box" id="scoreDisplay">المستوى: 1 | النقاط: 0</div>
+    </div>
+    <canvas id="gameCanvas"></canvas>
+    <div id="gameOver">
+        <h1>كبوة بطل!</h1>
+        <p id="finalScoreText"></p>
+        <button class="main-btn" onclick="resetGame()">حاول مرة أخرى</button>
+    </div>
+</div>
+
+<audio id="clapSound" src="https://www.soundjay.com/human/sounds/applause-01.mp3"></audio>
+
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const startScreen = document.getElementById('start-screen');
+    const gameContainer = document.getElementById('game-container');
+    const motivationMsg = document.getElementById('motivation-msg');
+    const clapSound = document.getElementById('clapSound');
+
+    let gender = 'male';
+    let gameActive = false;
+    let score = 0;
+    let level = 1;
+    let obstacles = [];
+    let frame = 0;
+
+    const messages = ["رائع!", "بطل حقيقي!", "ذكاء وسرعة!", "نحو القمة!", "لا يتوقف!", "BINASOU HERO!"];
+
+    function setGender(g, btn) {
+        gender = g;
+        document.querySelectorAll('.gender-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add
