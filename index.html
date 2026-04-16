@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>BINASOU JUMP HERO</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body { margin: 0; background-color: #000; color: #d4af37; font-family: sans-serif; overflow: hidden; touch-action: manipulation; text-align: center; }
+        canvas { display: block; margin: 10px auto; background: #050505; border: 3px solid #d4af37; border-radius: 15px; box-shadow: 0 0 20px #d4af3766; max-width: 95%; }
+        .score { font-size: 30px; margin: 10px; font-weight: bold; }
+        #gameOver { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.9); border: 2px solid #d4af37; padding: 30px; border-radius: 20px; display: none; width: 80%; }
+        button { background: #d4af37; color: #000; border: none; padding: 15px 30px; font-size: 20px; font-weight: bold; border-radius: 50px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="score">🏆: <span id="score">0</span></div>
+    <canvas id="gameCanvas"></canvas>
+    <div id="gameOver">
+        <h1>انتهت اللعبة!</h1>
+        <p>نقاطك: <span id="finalScore">0</span></p>
+        <button onclick="location.reload()">إعادة المحاولة 🔄</button>
+    </div>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = 350; canvas.height = 400;
+        let score = 0, gameActive = true, frame = 0;
+        let player = { x: 50, y: 340, w: 40, h: 40, dy: 0, jump: -12, grav: 0.8, grounded: false };
+        let obstacles = [];
+        function draw() {
+            if (!gameActive) return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            player.dy += player.grav; player.y += player.dy;
+            if (player.y + player.h > 380) { player.y = 380 - player.h; player.dy = 0; player.grounded = true; }
+            ctx.fillStyle = '#d4af37'; ctx.fillRect(player.x, player.y, player.w, player.h);
+            if (frame++ % 80 === 0) obstacles.push({ x: canvas.width, y: 340, w: 30, h: 40 });
+            obstacles.forEach((obs, i) => {
+                obs.x -= 6; ctx.fillStyle = '#555'; ctx.fillRect(obs.x, obs.y, obs.w, obs.h);
+                if (player.x < obs.x + obs.w && player.x + player.w > obs.x && player.y < obs.y + obs.h && player.y + player.h > obs.y) {
+                    gameActive = false; document.getElementById('gameOver').style.display = 'block'; document.getElementById('finalScore').innerText = score;
+                }
+                if (obs.x + obs.w < 0) { obstacles.splice(i, 1); score++; document.getElementById('score').innerText = score; }
+            });
+            requestAnimationFrame(draw);
+        }
+        window.addEventListener('touchstart', () => { if (player.grounded) { player.dy = player.jump; player.grounded = false; } });
+        draw(); Telegram.WebApp.ready();
+    </script>
+</body>
+</html>
