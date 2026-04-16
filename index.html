@@ -1,48 +1,84 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>BINASOU JUMP HERO</title>
     <style>
-        :root { 
-            --gold: #d4af37; 
-            --silver: #C0C0C0;
-            --premium-bg: #000000;
-            --btn-grad: linear-gradient(45deg, #d4af37, #f9e297, #C0C0C0);
-        }
+        body { margin: 0; background: #000; color: #d4af37; font-family: sans-serif; overflow: hidden; }
+        #start-screen { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #000; z-index: 100; }
+        .btn { background: linear-gradient(45deg, #d4af37, #C0C0C0); border: none; padding: 15px 30px; font-size: 20px; font-weight: bold; border-radius: 50px; cursor: pointer; margin-top: 20px; }
+        canvas { display: none; background: #111; width: 100vw; height: 100vh; }
+        #ui { position: fixed; top: 10px; width: 100%; text-align: center; display: none; font-size: 24px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div id="start-screen">
+    <h1 style="text-shadow: 0 0 10px #d4af37;">BINASOU JUMP HERO</h1>
+    <p>اختر البطل: <select id="gender" style="padding: 5px;"><option value="male">رجل ذهبي</option><option value="female">امرأة ذهبية</option></select></p>
+    <button class="btn" onclick="start()">Welcome to BINASOU</button>
+</div>
+
+<div id="ui">النقاط: 0</div>
+<canvas id="g"></canvas>
+
+<script>
+    const canvas = document.getElementById('g');
+    const ctx = canvas.getContext('2d');
+    let score = 0, active = false, obstacles = [];
+
+    const hero = { x: 50, y: 0, w: 40, h: 50, dy: 0, jump: -15, grav: 0.8 };
+
+    function start() {
+        document.getElementById('start-screen').style.display = 'none';
+        canvas.style.display = 'block';
+        document.getElementById('ui').style.display = 'block';
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        hero.y = canvas.height - 100;
+        active = true;
+        loop();
+    }
+
+    function loop() {
+        if (!active) return;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        body, html { 
-            margin: 0; padding: 0; width: 100%; height: 100%;
-            background-color: var(--premium-bg); 
-            color: var(--gold); font-family: 'Segoe UI', Tahoma, sans-serif; 
-            overflow: hidden; touch-action: none;
-        }
+        // رسم الأرضية
+        ctx.fillStyle = '#d4af37';
+        ctx.fillRect(0, canvas.height-50, canvas.width, 5);
 
-        /* شاشة البداية */
-        #start-screen {
-            position: absolute; width: 100%; height: 100%; 
-            background: rgba(0,0,0,1);
-            z-index: 200; display: flex; flex-direction: column; 
-            align-items: center; justify-content: center; text-align: center;
-        }
+        // جاذبية
+        hero.dy += hero.grav;
+        hero.y += hero.dy;
+        if (hero.y > canvas.height - 100) { hero.y = canvas.height - 100; hero.dy = 0; }
 
-        .welcome-title { 
-            font-size: clamp(24px, 8vw, 40px); 
-            margin-bottom: 20px; 
-            text-shadow: 0 0 15px var(--gold); 
-            font-weight: bold;
-        }
+        // رسم البطل
+        ctx.fillStyle = '#d4af37';
+        ctx.fillRect(hero.x, hero.y, hero.w, hero.h);
+        ctx.fillStyle = '#C0C0C0';
+        ctx.fillRect(hero.x+10, hero.y-15, 20, 20);
 
-        .gender-select { margin-bottom: 30px; }
-        .gender-btn { 
-            background: none; border: 2px solid var(--silver); color: #fff; 
-            padding: 12px 25px; margin: 5px; border-radius: 15px; cursor: pointer;
-            font-size: 16px; transition: 0.3s;
-        }
-        .gender-btn.active { background: var(--gold); color: black; border-color: var(--gold); box-shadow: 0 0 10px var(--gold); }
+        // العقبات
+        if (Math.random() < 0.02) obstacles.push({ x: canvas.width, w: 30, h: 40 });
+        obstacles.forEach((o, i) => {
+            o.x -= 6;
+            ctx.fillStyle = '#C0C0C0';
+            ctx.fillRect(o.x, canvas.height-90, o.w, o.h);
+            
+            // تصادم
+            if (hero.x < o.x + o.w && hero.x + hero.w > o.x && hero.y + hero.h > canvas.height-90) {
+                location.reload();
+            }
+            if (o.x < -o.w) { obstacles.splice(i, 1); score++; document.getElementById('ui').innerText = "النقاط: " + score; }
+        });
 
-        /* حاوية اللعبة */
-        #game-container { 
-            position: relative; width: 100%; height: 100%; 
-            display: none; background-color: #
+        requestAnimationFrame(loop);
+    }
+
+    window.addEventListener('touchstart', () => { if(hero.y >= canvas.height - 100) hero.dy = hero.jump; });
+    window.addEventListener('mousedown', () => { if(hero.y >= canvas.height - 100) hero.dy = hero.jump; });
+</script>
+</body>
+</html>
