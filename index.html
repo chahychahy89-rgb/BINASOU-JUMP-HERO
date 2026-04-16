@@ -1,19 +1,88 @@
-// --- نظام التحكم بالقفز ---
-        const handleAction = () => {
-            // القفز فقط إذا كان البطل على الأرض واللعبة نشطة
+function initGame() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            document.getElementById('start-screen').classList.add('hidden');
+            active = true;
+            loop();
+        }
+
+        function resumeGame() {
+            document.getElementById('mid-ad-screen').classList.add('hidden');
+            obstacles = [];
+            active = true;
+            loop();
+        }
+
+        function loop() {
+            if (!active) return;
+            // لون خلفية يتغير مع كل مرحلة (الطبيعة البرمجية)
+            ctx.fillStyle = hsl(${(level * 60) % 360}, 30%, 10%);
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // الأرضية
+            ctx.fillStyle = '#222';
+            ctx.fillRect(0, canvas.height - 80, canvas.width, 80);
+            ctx.fillStyle = var(--gold);
+            ctx.fillRect(0, canvas.height - 80, canvas.width, 4);
+
+            // الفيزياء
+            hero.dy += hero.grav;
+            hero.y += hero.dy;
+            if (hero.y > canvas.height - 80 - hero.h) {
+                hero.y = canvas.height - 80 - hero.h;
+                hero.dy = 0;
+                hero.onGround = true;
+            }
+
+            // رسم البطل برمجياً
+            ctx.fillStyle = (gender === 'male') ? var(--gold) : '#ff66b2';
+            ctx.fillRect(hero.x, hero.y, hero.w, hero.h);
+
+            // العوائق
+            if (Math.random() < 0.02) obstacles.push({ x: canvas.width, w: 30, h: 40 });
+            
+            obstacles.forEach((o, i) => {
+                o.x -= (6 + level * 2);
+                ctx.fillStyle = var(--silver);
+                ctx.fillRect(o.x, canvas.height - 80 - o.h, o.w, o.h);
+
+                if (hero.x < o.x + o.w && hero.x + hero.w > o.x && hero.y + hero.h > canvas.height - 80 - o.h) {
+                    gameOver();
+                }
+
+                if (o.x < -o.w) {
+                    obstacles.splice(i, 1);
+                    score++;
+                    document.getElementById('score-val').innerText = score;
+                    if (score % 10 === 0) {
+                        level++;
+                        document.getElementById('level-val').innerText = level;
+                        active = false;
+                        clapSnd.play();
+                        document.getElementById('mid-ad-screen').classList.remove('hidden');
+                    }
+                }
+            });
+
+            animationId = requestAnimationFrame(loop);
+        }
+
+        function gameOver() {
+            active = false;
+            if (score > highScore) localStorage.setItem('binasou_highscore', score);
+            document.getElementById('game-over-screen').classList.remove('hidden');
+            document.getElementById('final-stats').innerHTML = 
+                نقاطك: ${score} يا ${userName}<br>
+                <span class="motivational-msg">أنت بطل حقيقي!</span>
+            ;
+        }
+
+        window.addEventListener('touchstart', () => {
             if (hero.onGround && active) {
                 hero.dy = hero.jump;
                 hero.onGround = false;
-                tg.HapticFeedback.impactOccurred('light'); // اهتزاز خفيف عند القفز
             }
-        };
-
-        // دعم اللمس (للهاتف) والماوس (للكمبيوتر)
-        window.addEventListener('touchstart', handleAction);
-        window.addEventListener('mousedown', handleAction);
-        
-        // منع التكبير عند النقر المزدوج (تحسين تجربة الآيفون)
-        document.addEventListener('gesturestart', (e) => e.preventDefault());
+        });
     </script>
 </body>
 </html>
